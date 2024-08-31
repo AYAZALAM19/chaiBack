@@ -183,6 +183,7 @@ const refreshAccessToken = asyncHandler(async (req,res) =>{
         throw new apiError(401,"Unauthorized request")
      }
 
+    try {
     const decodedToken= jwt.verify(incomingRefreshToken,process.env.REFRESH_TOKEN_SECRET)
 
     const user = await User.findById(decodedToken?._id)
@@ -208,12 +209,17 @@ const refreshAccessToken = asyncHandler(async (req,res) =>{
     .json(
         ApiResponse(
             200,
-            {accessToken , refreshToken : newRefreshToken}
+            {accessToken , refreshToken : newRefreshToken},"Access token rrefreshed"  
         )
     )
+    } catch (error) {
+        throw new apiError(401, error?.message || "Invalid refresh token")
+    }
+    
 })
 
 export {registerUser,
     loginUser,
-    logoutUser
+    logoutUser,
+    refreshAccessToken
 }
