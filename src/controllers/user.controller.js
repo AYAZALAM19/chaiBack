@@ -5,6 +5,7 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js"
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import { response } from "express";
+import mongoose from "mongoose";
 
 const generateAccessAndRefreshTokens = async (userId) => {
     try {
@@ -408,14 +409,29 @@ const getUserChennelProfile = asyncHandler(async (req, res) => {
     if (!channel?.length) {
         throw new apiError(400, "Channel dose not exists")
     }
-    return res
+    return res 
     .status (200)
     .json(
         new ApiResponse(200, channel[0],"User channel fetched successfully")
     )
 
+const getWatchHistory = asyncHandler(async(req,res) => {
+    const user = await User.aggregate([
+        {
+            $match: {
+                _id: req.user?._id
+            }
+        },
+        {
+            $lookup: {
+                from : "videos",
+                localField : "watchHistory",
+                foreignField : "_id",
+            }
+        }
+    ])
 })
-
+})
 
 export {
     registerUser,
