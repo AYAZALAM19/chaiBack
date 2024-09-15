@@ -393,7 +393,7 @@ const getUserChennelProfile = asyncHandler(async (req, res) => {
             }
         },
         {
-            $project:{
+            $project: {
                 username: 1,
                 fullname: 1,
                 subscribersCount: 1,
@@ -409,28 +409,59 @@ const getUserChennelProfile = asyncHandler(async (req, res) => {
     if (!channel?.length) {
         throw new apiError(400, "Channel dose not exists")
     }
-    return res 
-    .status (200)
-    .json(
-        new ApiResponse(200, channel[0],"User channel fetched successfully")
-    )
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, channel[0], "User channel fetched successfully")
+        )
 
-const getWatchHistory = asyncHandler(async(req,res) => {
-    const user = await User.aggregate([
-        {
-            $match: {
-                _id: req.user?._id
+    const getWatchHistory = asyncHandler(async (req, res) => {
+        const user = await User.aggregate([
+            {
+                $match: {
+                    _id: req.user?._id
+                }
+            },
+            {
+                $lookup: {
+                    from: "videos",
+                    localField: "watchHistory",
+                    foreignField: "_id",
+                    as: "watchHistory",
+                    pipeline: [{
+                        $lookup: {
+                            from: "users",
+                            localField: "owner",
+                            foreignField: "_id",
+                            as: "owner",
+                            pipeline: [
+                                {
+                                    $project: {
+                                        fullname: 1,
+                                        username: 1,
+                                        avatar: 1,
+                                    }
+                                }
+                            ]
+                        }
+                    }]
+                }
+            },
+            {
+                $addFields: {
+                    owner: {
+                        $frist: "$owner"
+                    }
+                }
             }
-        },
-        {
-            $lookup: {
-                from : "videos",
-                localField : "watchHistory",
-                foreignField : "_id",
-            }
-        }
-    ])
-})
+        ])
+        return res
+            .status(200)
+            .json(new ApiResponse(
+                200, user[0].watchHistory,
+                "Watch history fetched successfully"
+            ))
+    })
 })
 
 export {
@@ -444,4 +475,5 @@ export {
     updateUserAvatar,
     updateUserCoverImage,
     getUserChennelProfile,
+    getWatchHistory
 }
