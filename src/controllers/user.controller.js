@@ -22,7 +22,7 @@ const generateAccessAndRefreshTokens = async (userId) => {
 }
 
 const registerUser = asyncHandler(async (req, res) => {
-    res.status(200).json({
+    res.status(200).json(200,{
         message: "Chai aur Code"
     })
     // get user Details from frontend
@@ -163,8 +163,8 @@ const loginUser = asyncHandler(async (req, res) => {
 const logoutUser = asyncHandler(async (req, res,) => {
     User.findByIdAndUpdate(
         req.user._id, {
-        $set: {
-            refreshTooken: undefined
+        $unset: {
+            refreshTooken: 1 //this removes the fields from documents
         }
     },
         {
