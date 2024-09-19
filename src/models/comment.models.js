@@ -7,11 +7,7 @@ const commentSchema = new Schema(
             type: String,
             required: true
         },
-        // createdAt : {
-        //     type: Date,
-        //     default: Date.now  
-        // },
-        video : {
+        video: {
             type : {
                 type: Schema.Types.ObjectId,
                 ref : "Video"

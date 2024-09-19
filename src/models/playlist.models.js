@@ -10,7 +10,7 @@ const PlaylistSchema  = new Schema(
             type : String,
             required:true,
         },
-        Video :[{             // this video is in a playlist so we have to make it in array 
+        Videos:[{             // this video is in a playlist so we have to make it in array 
             type : Schema.Types.ObjectId,
             ref : "Video"
         }],
