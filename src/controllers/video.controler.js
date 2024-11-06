@@ -63,7 +63,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
 // Here we are Publishing the Videos\
 const publishVideo = asyncHandler(async (req, res) => {
     const { title, description } = req.body;
-    //const {user_id} = req.body;
+    // const {user_id} = req.body;
     if (!title || !description) {
         throw new apiError(400, "All Fields Aer Required")
     }
@@ -133,19 +133,82 @@ const getVideoById = asyncHandler(async (req, res) => {
 
     const video = await Video.findById(videoId)
 
-    if(!video){
+    if(!video)
+     {
         throw new apiError(400,"Something wronng happened while fetching video")
-    }
+     }
     
     // check you are the owner of this video or not
-    if(!req.user._id.equals(video.owner._id)){
+    if(!req.user._id.equals(video.owner._id))
+      {
         throw new apiError(400,"You are not the owner of this Video");
-    }
-})
+      }
 
+    //Delete the old thumbnail from cloudinary
+    if(video.thumbnail){
+        const oldThumbnail = video.thumbnail.split("/").pop().split(".")[0];    
+        await deleteFromCloudinary(oldThumbnail)
+    }
+
+    //upload new thumbnail
+    const thumbnail = uploadOnCloudinary(thumbnailLocalpath)
+    const videos = await Video.findByIdAndUpdate(
+        videoId,
+        {
+            $set:{
+                title : title,
+                description : description,
+                thumbnail :thumbnail.url
+            }
+        },{
+            new: true
+        });
+        return res
+        .status(200)
+        .jason(new ApiResponse(200,videos,"Video updated Successfully"))
+    });
+    
+    //Here we are deleting the video
+
+    const deleteVideo = asyncHandler(async (req, res) => {
+        const { videoId } = req.params
+       const video =  await Video.findByIdAndDelete(videoId)
+       if(!video)
+        {
+        throw new apiError(404, "No video Found")
+       }
+       if(!req.user._id.equals(video.owner._id)){
+        throw new apiError(400,"you are not the owner of the video")
+       }
+        //Delete the video from cloudinary
+      if(video.videoFiles){
+        const  deleteVideo = video.videoFile.split("/").pop().split(".")[0];
+        await deleteFromCloudinary(deleteVideo);
+      }
+      return res .status(200)
+      .jason(new ApiResponse(200,video,"Video deleted Sucessfully"))
+    });
+    //Here we are toggling the publish status
+    const togglePublishStatus = asyncHandler(async (req , res) => {
+        const {videoId} = req.params
+        const video = await video.findById(videoId)
+        if(!video){
+            throw new apiError(404,"No Video Found")
+        }
+        if(!req.user._id.equals(video.owner._id)){
+            throw new apiError(400,"You are not the owner of this video");
+        }
+        video.isPublished = !video.isPublished
+        const updatedVideo = await video.save()
+        return res
+        .status(200)
+        .jason(new ApiResponse(200, updatedVideo,"Video is Published status update successfully"))
+    });
 export {
     getAllVideos,
     publishVideo,
     getVideoById,
     updateVideo,
+    deleteVideo,
+    togglePublishStatus,
 }
