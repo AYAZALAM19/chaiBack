@@ -35,3 +35,7 @@ const getUserTweet = asyncHandler(async(req, res) =>{
     .jason(new ApiResponse(200, tweet, "Tweet fetched successfully"))
 })
 //Here we are updating the tweet
+
+export{
+    getUserTweet,
+}
